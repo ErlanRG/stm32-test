@@ -20,6 +20,8 @@
 #include "main.h"
 #include "gpio.h"
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -51,7 +53,7 @@
 
 /* USER CODE BEGIN PV */
 
-uint8_t data[] = "Hello world\r\n";
+char data[6];
 
 /* USER CODE END PV */
 
@@ -73,6 +75,7 @@ void SystemClock_Config(void);
 int main(void) {
 
   /* USER CODE BEGIN 1 */
+  uint8_t counter = 0;
 
   /* USER CODE END 1 */
 
@@ -106,7 +109,10 @@ int main(void) {
   while (1) {
     if (Button_WasPressed(B1_GPIO_Port, B1_Pin, 50)) {
       HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-      HAL_UART_Transmit(&huart2, data, sizeof(data), 1000);
+      ++counter;
+      sprintf(data, "%u\r\n",
+              counter); // convert the integer value into the printable value
+      HAL_UART_Transmit(&huart2, (uint8_t *)data, strlen(data), 1000);
     }
   }
 }
