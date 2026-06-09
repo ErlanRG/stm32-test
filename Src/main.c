@@ -19,9 +19,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "gpio.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
+#include "tim.h"
+#include "usart.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -29,8 +28,10 @@
 #include "stm32l4xx_hal.h"
 #include "stm32l4xx_hal_def.h"
 #include "stm32l4xx_hal_gpio.h"
+#include "stm32l4xx_hal_tim.h"
 #include "stm32l4xx_hal_uart.h"
-#include "usart.h"
+#include <stdio.h>
+#include <string.h>
 
 /* USER CODE END Includes */
 
@@ -53,7 +54,8 @@
 
 /* USER CODE BEGIN PV */
 
-char data[6];
+char data[32];
+uint8_t brightness = 0;
 
 /* USER CODE END PV */
 
@@ -75,7 +77,6 @@ void SystemClock_Config(void);
 int main(void) {
 
   /* USER CODE BEGIN 1 */
-  uint8_t counter = 0;
 
   /* USER CODE END 1 */
 
@@ -99,8 +100,9 @@ int main(void) {
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 
   /* USER CODE END 2 */
 
@@ -108,13 +110,13 @@ int main(void) {
   /* USER CODE BEGIN WHILE */
   while (1) {
     if (Button_WasPressed(B1_GPIO_Port, B1_Pin, 50)) {
-      HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-      ++counter;
-      sprintf(data, "%u\r\n",
-              counter); // convert the integer value into the printable value
+      brightness = (brightness + 64) % 256;
+      __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, brightness);
+      sprintf(data, "Brightness: %u\r\n", brightness);
       HAL_UART_Transmit(&huart2, (uint8_t *)data, strlen(data), 1000);
     }
   }
+  /* USER CODE END 3 */
 }
 
 /**
